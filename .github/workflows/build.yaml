@@ -128,6 +128,20 @@ jobs:
           }
           Write-Host "corlib OK: $corlib"
 
+          # BeefBuild resolves BeefLibs relative to its own folder; hedge on the layout
+          foreach ($dest in @("$beefBin\BeefLibs", "$beefBin\..\..\BeefLibs")) {
+            if (-not (Test-Path "$dest\corlib")) {
+              New-Item -ItemType Directory -Force -Path $dest | Out-Null
+              Copy-Item "$beefRoot\BeefLibs\*" $dest -Recurse -Force
+            }
+          }
+
+          Write-Host "--- Diagnostics ---"
+          Write-Host "BeefBuild: $beefBin\BeefBuild.exe"
+          Get-ChildItem "$beefRoot\BeefLibs" | ForEach-Object { Write-Host "  BeefLibs/$($_.Name)" }
+          Get-ChildItem "$corlib" | Select-Object -First 15 | ForEach-Object { Write-Host "  corlib/$($_.Name)" }
+          Write-Host "BeefProj.toml present: $(Test-Path "$corlib\BeefProj.toml")"
+
       - name: Compile target project with BeefBuild
         shell: pwsh
         working-directory: Code
